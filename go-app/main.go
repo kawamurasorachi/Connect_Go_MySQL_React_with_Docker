@@ -1,17 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"log"
 	"net/http"
 )
 
 func main() {
-	// controller
-	http.HandleFunc("/", echoHello)
-	// port
-	http.ListenAndServe(":8000", nil)
-}
 
-func echoHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<h1>Hello World</h1>")
+	flag.Parse()
+	hub := newHub()
+	go hub.run()
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(hub, w, r)
+	})
+	err := http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
